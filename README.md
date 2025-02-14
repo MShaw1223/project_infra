@@ -16,10 +16,12 @@ Ensure that **Docker** and **Docker Compose** are installed on your system.
    git clone https://github.com/MShaw1223/project_infra.git
    ```
 2.	Navigate into the project directory:
+   
    ```bash
    cd project_infra
    ```
 3. Build and start the containers:
+
    ```bash
    docker-compose build --no-cache && docker-compose up
    ```
