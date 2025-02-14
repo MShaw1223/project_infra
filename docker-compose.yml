@@ -30,9 +30,9 @@ services:
     command: >
       sh -c "wait-for-it mysql-db:3306 -- && \
       cd /app/addressBook/myproject && \
-      echo 'Creating superuser...' && python manage.py shell < /app/create_superuser.py && \
       python manage.py makemigrations && \
       echo 'Running migrations...' && python manage.py migrate && \
+      echo 'Creating superuser...' && python manage.py shell < /app/create_superuser.py && \
       echo 'Starting server...' && python manage.py runserver 0.0.0.0:80"
 
 volumes:
