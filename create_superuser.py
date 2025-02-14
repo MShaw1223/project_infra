@@ -1,7 +1,7 @@
 import django
 import os
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.myproject.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")
 django.setup()
 
 from myapp.models import ABUser
