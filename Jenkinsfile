@@ -46,11 +46,9 @@ pipeline {
     }
     post {
         always {
-	    agent any
             sh 'docker-compose logs'
         }
         failure {
-	    agent any
             sh 'docker-compose down'
         }
     }
