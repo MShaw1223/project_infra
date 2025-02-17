@@ -10,6 +10,7 @@ pipeline {
     }
     stages {
         stage('Build Docker Image') {
+            agent { node { label 'any' } }
             steps {
                 script {
                     withCredentials([sshUserPrivateKey(credentialsId: params.SSH_CREDENTIALS_ID, keyFileVariable: 'SSH_KEY_PATH')]) {
@@ -21,6 +22,7 @@ pipeline {
             }
         }
         stage('Run Docker Containers') {
+            agent { node { label 'any' } }
             steps {
                 script {
                     withCredentials([sshUserPrivateKey(credentialsId: params.SSH_CREDENTIALS_ID, keyFileVariable: 'SSH_KEY_PATH')]) {
@@ -32,6 +34,7 @@ pipeline {
             }
         }
         stage('Health Check') {
+            agent { node { label 'any' } }
             steps {
                 script {
                     withCredentials([sshUserPrivateKey(credentialsId: params.SSH_CREDENTIALS_ID, keyFileVariable: 'SSH_KEY_PATH')]) {
@@ -47,20 +50,24 @@ pipeline {
     post {
         always {
             script {
-                withCredentials([sshUserPrivateKey(credentialsId: params.SSH_CREDENTIALS_ID, keyFileVariable: 'SSH_KEY_PATH')]) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ${EC2_USER}@${EC2_HOST} 'docker ps -a'
-                    """
+		node {
+                    withCredentials([sshUserPrivateKey(credentialsId: params.SSH_CREDENTIALS_ID, keyFileVariable: 'SSH_KEY_PATH')]) {
+                        sh """
+                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ${EC2_USER}@${EC2_HOST} 'docker ps -a'
+                        """
+		    }
                 }
             }
         }
         failure {
             script {
-                echo "Build failed. Checking logs..."
-                withCredentials([sshUserPrivateKey(credentialsId: params.SSH_CREDENTIALS_ID, keyFileVariable: 'SSH_KEY_PATH')]) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ${EC2_USER}@${EC2_HOST} 'docker-compose logs'
-                    """
+		node {
+                    echo "Build failed. Checking logs..."
+                    withCredentials([sshUserPrivateKey(credentialsId: params.SSH_CREDENTIALS_ID, keyFileVariable: 'SSH_KEY_PATH')]) {
+                        sh """
+                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ${EC2_USER}@${EC2_HOST} 'docker-compose logs'
+                        """
+		    }
                 }
             }
         }
