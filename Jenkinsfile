@@ -1,33 +1,45 @@
 pipeline {
     agent any
     parameters {
-        string(name: 'PUBLIC_IP', description: 'Public IP address of the server')
+        string(name: 'PUBLIC_IP', description: 'Public IP address of the EC2 server')
+    }
+    environment {
+        EC2_USER = 'ec2-user'  
+        EC2_HOST = "${params.PUBLIC_IP.replace('.','-')}"
+        SSH_CREDENTIALS_ID = 'ssh-key-jenkins-ec2'
     }
     stages {
-        stage('Clone Repository') {
+        stage('Build Docker Image') {
             steps {
-                git branch: 'prod', url: 'https://github.com/adampalmergithub/addressBook.git'
+                script {
+                    withCredentials([sshUserPrivateKey(credentialsId: SSH_CREDENTIALS_ID, keyFileVariable: 'SSH_KEY_PATH')]) {
+		        sh """
+                        ssh -i ${SSH_KEY_PATH} ${EC2_USER}@${EC2_HOST} 'cd finalproj && docker-compose build --no-cache'
+                        """
+		    }
+                }
             }
         }
-        stage('Build') {
+        stage('Run Docker Containers') {
             steps {
-                sh 'docker-compose down --volumes --remove-orphans'
-                sh 'docker-compose build --no-cache'
-            }
-        }
-        stage('Run') {
-            steps {
-                sh 'docker-compose up -d'
+                script {
+                    withCredentials([sshUserPrivateKey(credentialsId: SSH_CREDENTIALS_ID, keyFileVariable: 'SSH_KEY_PATH')]) {
+                        sh """
+                        ssh -i ${SSH_KEY_PATH} ${EC2_USER}@${EC2_HOST} 'cd finalproj && docker-compose up -d'
+                        """
+        	    }
+                }
             }
         }
         stage('Health Check') {
             steps {
                 script {
-                    sleep(10)
-                    def response = sh(script: "curl -s -o /dev/null -w '%{http_code}' http://${params.PUBLIC_IP}", returnStdout: true).trim()
-                    if (response != '200') {
-                        error("Application is not responding correctly. Received HTTP ${response}")
-                    }
+                    withCredentials([sshUserPrivateKey(credentialsId: SSH_CREDENTIALS_ID, keyFileVariable: 'SSH_KEY_PATH')]) {
+                        def response = sh(script: "ssh -i ${SSH_KEY_PATH} ${EC2_USER}@${EC2_HOST} 'curl -s -o /dev/null -w \"%{http_code}\" http://localhost'", returnStdout: true).trim()
+                        if (response != '200') {
+                            error("Application is not responding correctly. Received HTTP ${response}")
+                        }
+		    }
                 }
             }
         }

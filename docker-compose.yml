@@ -35,6 +35,18 @@ services:
       echo 'Running migrations...' && python manage.py migrate && \
       echo 'Creating superuser...' && python manage.py shell < /app/create_superuser.py && \
       echo 'Starting server...' && python manage.py runserver 0.0.0.0:80"
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    restart: always
+    ports:
+      - "8080:8080"  # Jenkins UI
+      - "50000:50000"  # Jenkins agent communication
+    volumes:
+      - jenkins_data:/var/jenkins_home
+    environment:
+      JAVA_OPTS: -Djenkins.install.runSetupWizard=false
 
 volumes:
   mysql_data:
+  jenkins_data:
