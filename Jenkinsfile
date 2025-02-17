@@ -46,14 +46,12 @@ pipeline {
     }
     post {
         always {
-	    node {
-                sh 'docker-compose logs'
-	    }
+	    agent any
+            sh 'docker-compose logs'
         }
         failure {
-            node {
-                sh 'docker-compose down'
-            }
+	    agent any
+            sh 'docker-compose down'
         }
     }
 }
